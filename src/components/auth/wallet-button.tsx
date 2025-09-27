@@ -2,7 +2,7 @@
 
 import { usePrivy } from '@privy-io/react-auth'
 import { Button } from '@/components/ui/button'
-import { Wallet, User, LogOut } from 'lucide-react'
+import { Wallet, LogOut } from 'lucide-react'
 import { useState } from 'react'
 
 export function WalletButton() {

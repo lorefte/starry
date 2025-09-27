@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Moon, TrendingUp, TrendingDown } from "lucide-react"
 
@@ -50,8 +50,8 @@ const mockActivities: ActivityItem[] = [
 ]
 
 export function RecentActivity() {
-  const [activities, setActivities] = useState<ActivityItem[]>(mockActivities)
-  const [marketStatus, setMarketStatus] = useState("ACCEPTING ORDERS - MARKET CLOSED")
+  const [activities] = useState<ActivityItem[]>(mockActivities)
+  const [marketStatus] = useState("ACCEPTING ORDERS - MARKET CLOSED")
 
   return (
     <div className="bg-card border border-border rounded-lg p-6">

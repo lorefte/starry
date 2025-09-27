@@ -17,7 +17,6 @@ const navigation = [
 
 export function Header() {
   const pathname = usePathname()
-  const [isWalletConnected] = useState(false) // Will be replaced with Privy integration
   const [searchQuery, setSearchQuery] = useState("")
 
   return (
