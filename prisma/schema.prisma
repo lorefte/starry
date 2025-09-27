@@ -1,0 +1,167 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  walletAddress String?   @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  portfolios    Portfolio[]
+  investments   Investment[]
+  transactions  Transaction[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Portfolio {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  category    String   // e.g., "Automotive", "Wine", "Stamps", "Art"
+  creatorId   String
+  sharePrice  Decimal  @db.Decimal(10, 2)
+  totalShares Int      @default(1000)
+  marketCap   Decimal  @db.Decimal(15, 2)
+  isPublic    Boolean  @default(true)
+  isInviteOnly Boolean @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  creator      User          @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  assets       Asset[]
+  investments  Investment[]
+  transactions Transaction[]
+  performance  Performance[]
+
+  @@index([category])
+  @@index([isPublic])
+}
+
+model Asset {
+  id          String   @id @default(cuid())
+  portfolioId String
+  name        String
+  description String
+  category    String
+  value       Decimal  @db.Decimal(15, 2)
+  imageUrl    String?
+  metadata    Json?    // Store additional asset-specific data
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  portfolio Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  @@index([portfolioId])
+  @@index([category])
+}
+
+model Investment {
+  id          String   @id @default(cuid())
+  userId      String
+  portfolioId String
+  shares      Int
+  amount      Decimal  @db.Decimal(15, 2)
+  createdAt   DateTime @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  portfolio Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, portfolioId])
+  @@index([userId])
+  @@index([portfolioId])
+}
+
+model Transaction {
+  id          String            @id @default(cuid())
+  userId      String
+  portfolioId String
+  type        TransactionType
+  shares      Int
+  amount      Decimal           @db.Decimal(15, 2)
+  price       Decimal           @db.Decimal(10, 2)
+  status      TransactionStatus @default(PENDING)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  portfolio Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([portfolioId])
+  @@index([status])
+}
+
+model Performance {
+  id          String   @id @default(cuid())
+  portfolioId String
+  period      String   // "1M", "6M", "12M"
+  return      Decimal  @db.Decimal(5, 2) // Percentage return
+  createdAt   DateTime @default(now())
+
+  portfolio Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  @@unique([portfolioId, period])
+  @@index([portfolioId])
+}
+
+enum TransactionType {
+  BUY
+  SELL
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
